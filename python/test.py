@@ -1,40 +1,48 @@
 from model import *
 
+resource_palnets = []
+my_workers = []
+
 
 class MyStrategy:
+
     def __init__(self):
         pass
-    '''
-    Примитивная стратегия, которая пытается застроить всю карту каменоломнями и получать очки за добычу камня.
-    Смотри подсказки по ее улучшению, оформленные в виде специальных комментариев: # TODO ...
-    '''
-    def get_action(self, game: Game) -> Action:
+
+    def init_values(self, game):
+        resource_palnets.clear()
+        my_workers.clear()
+
+        for planet in game.planets:
+            if planet.harvestable_resource is not None:
+                resource_palnets.append(planet)
+
+            for worker_group in planet.worker_groups:
+                if worker_group.player_index == game.my_index:
+                    my_workers.append((planet.id, worker_group.number))
+
+
+    def action_generation(self, game):
         moves = []
         builds = []
-        # прочитать свойства здания "каменоломня"
-        quarry_properties = game.building_properties[BuildingType.QUARRY]
 
-        # перебрать все планеты
-        for planet_index, planet in enumerate(game.planets):
-            # попытаться построить каменоломню, ничего не проверяя (вдруг повезет)
-            # TODO стоит всё-таки проверить, выгодно ли строить на этой планете? См. поле planet.harvestable_resource
-            builds.append(BuildingAction(planet_index, BuildingType.QUARRY))
+        planets_workers_count = {}
 
-            # подсчитать количество своих роботов на этой планете
-            my_workers = sum(wg.number for wg in planet.worker_groups if wg.player_index == game.my_index)
-            if planet.harvestable_resource == Resource.STONE:
-                my_workers -= quarry_properties.max_workers             # вычесть количество занятых работой
-                # TODO кстати, роботы могут быть заняты не только работой, но и строительством. См. game.max_builders
+        for worker in my_workers:
+            for planet in resource_palnets:
+                if planets_workers_count[planet.id] < 50 and planet.resources >= min(worker[1], 50):
+                    moves.append(MoveAction(worker[0], planet.id, min(worker[1], 50), Resource.STONE))
 
-            # и всех бездельников отправить на другие планеты
-            next_planet_index = (planet_index + 1) % len(game.planets)  # выбрать следующую планету
-            # TODO перебирать планеты по индексу - плохая идея, лучше искать близкие и пригодные для застройки
-            if my_workers > 0 and (planet.building is not None or planet.harvestable_resource != Resource.STONE):
-                # отправлять группами по количеству стройматериала, необходимого для постройки следующей каменоломни
-                send_count = min(my_workers, quarry_properties.build_resources[Resource.STONE])
-                # TODO стоит проверить, что стройматериалы готовы к отправке и лежат на планете. См. planet.resources
-                moves.append(MoveAction(planet_index, next_planet_index, send_count, Resource.STONE))
-                # TODO за один ход можно отправить много групп роботов (вызывать moves.append() в цикле)
+        return (moves, builds)
 
-        # сформировать ответ серверу
-        return Action(moves, builds, None)
+
+
+    def get_action(self, game: Game) -> Action:
+
+        self.init_values(game)
+
+        moves = []
+        builds = []
+
+
+        return Action([], [], None)
