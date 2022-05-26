@@ -1,0 +1,8 @@
+python/__pycache__/
+python/codegame/
+python/debugging/
+python/debugging/
+python/entrypoint.sh
+python/stream_wrapper.py
+python/Dockerfile
+python/model/
