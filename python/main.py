@@ -23,13 +23,15 @@ class Runner:
         self.writer.flush()
 
     def run(self):
-        strategy = MyStrategy()
+        message = ServerMessage.read_from(self.reader)
+        strategy = MyStrategy(message.player_view)
         # debug_interface = DebugInterface(self.reader, self.writer)
 
         while True:
             message = ServerMessage.read_from(self.reader)
             if isinstance(message, ServerMessage.GetAction):
-                ClientMessage.ActionMessage(strategy.get_action(message.player_view)).write_to(self.writer)
+                ClientMessage.ActionMessage(strategy.get_action(
+                    message.player_view)).write_to(self.writer)
                 self.writer.flush()
             elif isinstance(message, ServerMessage.Finish):
                 break
