@@ -39,7 +39,7 @@ class MyStrategy:
         for planet in game.planets:
             for worker_froup in planet.worker_groups:
                 if worker_froup.player_index == 0:
-                    my_workers.append((planet.id, worker_froup.number))
+                    my_workers.append((planet, worker_froup.number))
 
 
     def print_planet(self, game: Game):
@@ -50,15 +50,32 @@ class MyStrategy:
 
 
 
-    def find_nearest_planets(self, start_planet: Planet, game: Game):
-        if self.main_planet:
+    def find_n_nearest(self, start_planet: Planet, game: Game, n_nearest: int) -> list:
+        if start_planet:
+            distances = [float("inf")] * n_nearest
+            planets = [0] * n_nearest
+
+            for t in range(n_nearest):
+                for planet in game.planets:
+                    for worker in my_workers:
+                        if planet.id != worker[0].id:
+                            if planet.harvestable_resource == None:
+                                if manhattan(start_planet.x, start_planet.y, planet.x, planet.y) < distances[t] and planet.id not in planets:
+                                    planets[t] = planet.id
+                                    distances[t] = manhattan(start_planet.x, start_planet.y, planet.x, planet.y)
+
+            return planets
+
+
+    def find_needed_nearest_planets(self, start_planet: Planet, game: Game):
+        if start_planet:
             nearests = [float("inf"), float("inf"), float("inf")]
 
             for planet in resource_palnets:
                 if planet.harvestable_resource in needed_res:
                     index = needed_res.index(planet.harvestable_resource)
-                    if nearests[index] > manhattan(start_planet.x, start_planet.y, self.main_planet.x, self.main_planet.y):
-                        nearests[index] = manhattan(start_planet.x, start_planet.y, self.main_planet.x, self.main_planet.y)
+                    if nearests[index] > manhattan(planet.x, planet.y, start_planet.x, start_planet.y):
+                        nearests[index] = manhattan(planet.x, planet.y, start_planet.x, start_planet.y)
                         main_resourses_planets[planet.harvestable_resource] = planet
 
 
@@ -74,7 +91,7 @@ class MyStrategy:
         if resource_palnets:
             self.main_planet = resource_palnets[0]
 
-        self.find_nearest_planets(self.main_planet, game)
+        self.find_needed_nearest_planets(self.main_planet, game)
         self.update_workers(game)
 
 
@@ -86,6 +103,10 @@ class MyStrategy:
                 for res, needed_planet in main_resourses_planets.items():
                     self.moves.append(MoveAction(self.main_planet.id, needed_planet.id, 100, Resource.STONE))
                     self.builds.append(BuildingAction(needed_planet.id, needed_buildings[res]))
+
+
+
+
 
 
         all_workers = []
