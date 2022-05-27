@@ -15,6 +15,10 @@ def dist(p1: Planet, p2: Planet) -> int:
 
 class MyStrategy:
     def __init__(self, game: Game):
+        self.main_planet = self.find_main_planet(game)
+        self.flag = False
+
+    def find_main_planet(self, game: Game) -> Planet:
         wg1, wg2 = [(p.worker_groups, p.id)
                     for p in game.planets if p.worker_groups]
 
@@ -28,12 +32,8 @@ class MyStrategy:
 
         wg1, wg2 = (set_worker_group_dict(wg) for wg in (wg1, wg2))
         main_planet_id = wg1['planet_id'] if wg1['workers_id'] == game.my_index else wg2['planet_id']
-        self.main_planet = game.planets[main_planet_id]
-        self.flag = False
 
-    def find_main_planet(self, game: Game) -> Planet:
-
-        pass
+        return game.planets[main_planet_id]
 
     def find_nearest_planets(self, game: Game, current_planet: Planet,
                              filtered_resources: list = [Resource.STONE]) -> list:
