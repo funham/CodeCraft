@@ -3,71 +3,43 @@ from model import *
 resource_palnets = []
 my_workers = []
 
-def manhattan(x1, y1, x2, y2):
-    return abs(x1 - x2) + abs(y1 - y2)
-
 main_resourses_planets = {
     Resource.ORE: None,
     Resource.SAND: None,
     Resource.ORGANICS: None,
-                        }
+}
 
-
-
-needed_res = [Resource.ORE, Resource.SAND, Resource.ORGANICS]
 
 class MyStrategy:
-
+    resources = (Resource.ORE, Resource.SAND, Resource.ORGANICS)
 
     def __init__(self):
         self.main_planet = None
         self.flag = False
 
+    @property
+    def nearest_planets(self, game: Game, current_planet: Planet) -> dict:
+        res_on_planets = dict.fromkeys(MyStrategy.resources, [])
 
+        for p in game.planets:
+            if p.harvestable_resource != Resource.STONE:
+                res_on_planets[p.harvestable_resource].append(p)
 
-    def print_planet(self, game: Game):
-        resource_palnets.clear()
-        for planet in game.planets:
-            if planet.harvestable_resource is not None:
-                resource_palnets.append(planet)
+        for _, planet in res_on_planets:
+            planet.sort(key=lambda p: MyStrategy.dist(p, current_planet))
 
-
-
-    def find_nearest_planets(self, game: Game):
-        if self.main_planet:
-            nearests = [float("inf"), float("inf"), float("inf")]
-
-            for planet in resource_palnets:
-                if planet.harvestable_resource in needed_res:
-                    index = needed_res.index(planet.harvestable_resource)
-                    if nearests[index] > manhattan(planet.x, planet.y, self.main_planet.x, self.main_planet.y):
-                        nearests[index] = manhattan(planet.x, planet.y, self.main_planet.x, self.main_planet.y)
-                        main_resourses_planets[planet.harvestable_resource] = planet.id
-
-
-
-
+        return res_on_planets
 
     def get_action(self, game: Game) -> Action:
-
-
         moves = []
         builds = []
 
-        self.print_planet(game)
         if resource_palnets:
             self.main_planet = resource_palnets[0]
 
         self.find_nearest_planets(game)
 
+        return Action(moves, builds, None)
 
-        print(main_resourses_planets)
-        # if not self.flag:
-        #     if self.main_planet.resources.stone > 900:
-        #         for needed_planet in main_resourses_planets.values():
-        #             moves.append(MoveAction(self.main_planet.id, needed_planet, 300, Resource.STONE))
-        #
-        #     flag = True
-
-
-        return Action(moves, [], None)
+    def dist(p1: Planet, p2: Planet) -> int:
+        return abs(p1.x - p2.x) + abs(p1.y - p2.y)
